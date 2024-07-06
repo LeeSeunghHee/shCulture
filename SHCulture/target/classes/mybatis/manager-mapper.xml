@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+	
+<mapper namespace="com.seung.repository.ManagerDAO">
+
+	<select id="countQna" resultType="qna" parameterType="String">
+		select count(idx) as countQna
+			from BMqna where userId = #{userId}
+	</select>
+
+	<select id="selectQnaUser" parameterType="String" resultType="qna">
+		select q.*,
+			(select count(r.idx) from BMreply r where r.qna = q.idx) as rep
+		from BMqna q
+			where userId = #{userId} order by writeDate
+	</select>
+	
+	<insert id="addQna" parameterType="qna">
+		insert into BMqna 
+			(userId, qnaCategory, title, qna) 
+		values
+			(#{userId}, #{qnaCategory}, #{title}, #{qna})	
+	</insert>
+	
+	<select id="selectQna" parameterType="qna" resultType="qna">
+		select q.*,
+			(select count(r.idx) from BMreply r where r.qna = q.idx) as rep
+		from BMqna q
+			where q.idx = #{idx}
+	</select>
+	
+	<select id="selectReply" parameterType="Integer" resultType="reply">
+		select * from Bmreply where qna = #{idx}
+	</select>
+	
+	<select id="selectOptionQna" resultType="qna" parameterType="hashmap">
+		select q.*,
+			(select count(r.idx) from BMreply r where r.qna = q.idx) as rep
+		from BMqna q
+		<if test="search != null or checkOp != '전체'">
+			where
+		</if>
+		<if test="search != null">
+			(q.title like '%'||#{search}||'%' or q.userId like '%'||#{search}||'%')
+		</if>
+		<if test="search != null and checkOp != '전체'">
+			and 
+		</if>
+		<if test="checkOp != '전체'">
+			q.qnaCategory = #{checkOp}
+		</if>
+		order by rep, writeDate
+	</select>
+	
+	<select id="selectMQ">
+		select * from BMqna where idx = #{idx}
+	</select>
+	
+	<delete id="deleteQna" parameterType="hashmap">
+		delete BMqna where idx = #{idx}	
+	</delete>
+	
+	<update id="modifyQna" parameterType="qna">
+		update BMqna set
+			qnaCategory=#{qnaCategory}, title=#{title}, qna=#{qna}
+		where idx=#{idx} and userId=#{userId}
+	</update>
+	
+	
+	<insert id="insertReply" parameterType="reply">
+		insert into BMreply (qna, reply) values (#{qna}, #{reply})
+	</insert>
+	
+	
+	<update id="updateReply" parameterType="reply">
+		update BMreply set
+			reply=#{reply} where qna = #{qna}
+	</update>
+	
+	<select id="memberList" resultType="member">
+		select * from BMmember
+	</select>
+	
+	<select id="restList" resultType="rst">
+		select t.*,
+			(select round(avg(w.star),1) from BMreview w where w.rest = t.idx) as ravg
+		 from BMrest t 
+			order by restName, international
+	</select>
+	
+	<select id="warningList" parameterType="String" resultType="warning">
+		select w.*, r.restName
+			from BMwarning w
+		inner join BMrest r on r.idx = w.rest
+		<if test="approval != ''">
+			where w.approval = #{approval}
+		</if>
+		order by  w.approval, w.writeDate 
+	</select>
+	
+	<select id="selectWarning" parameterType="hashmap" resultType="warning">
+		select w.*, r.restName
+			from BMwarning w
+		inner join BMrest r on r.idx = w.rest 
+			where w.idx = #{idx} and w.approval =  #{approval}
+	</select>
+	
+	<select id="searchRest" parameterType="String" resultType="rst">
+		select t.*,
+				(select round(avg(w.star),1) from BMreview w where w.rest = t.idx) as ravg
+			 from BMrest t	
+		where t.international like '%'||#{data}||'%' 
+				or t.restName like '%'||#{data}||'%' 
+				or t.gun like '%'||#{data}||'%'
+			order by restName, international
+	</select>
+	
+	<delete id="deleteRest">
+		delete BMrest where idx = #{idx}
+	</delete>
+	
+	<update id="updateWarning" parameterType="warning">
+		update BMwarning set 
+			approval = #{approval}
+		<if test="appPs != ''">
+			, appPs = #{appPs}
+		</if>
+			where idx = #{idx}
+	</update>
+	
+</mapper>

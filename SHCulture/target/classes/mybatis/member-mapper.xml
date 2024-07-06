@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+	
+<mapper namespace="com.seung.repository.MemberDAO">
+	
+	<select id="login" parameterType="member" resultType="member">
+		select * from BMmember where userId=#{userId} and userPw=#{userPw}
+	</select>
+
+	<select id="selectPick" parameterType="String" resultType="rst">
+		select r.*,
+			(select round(avg(w.star),1) from BMreview w where w.rest = r.idx) as ravg
+			from BMrest r
+				inner join BMpick p on p.rest = r.idx
+			where p.userId = #{userId}
+	</select>
+	
+
+	<select id="checkID" parameterType="String" resultType="int">
+		select count(userId) from BMmember where userId=#{userId}
+	</select>
+	
+	<select id="checkNick" parameterType="String" resultType="int">
+		select count(nickname) from BMmember where nickname=#{nickname}
+	</select>
+	
+	<select id="checkEmail" parameterType="String" resultType="int">
+		select count(email) from BMmember where email=#{email}
+	</select>
+	
+	<insert id="join" parameterType="member">
+		insert into BMmember 
+		 		(userId, userPw, userName, nickname, pnum, email, memberType, profileImg)
+			values 
+				(#{userId}, #{userPw}, #{userName}, #{nickname}, #{pnum}, #{email}, #{memberType}, #{profileImg, jdbcType=VARCHAR})
+	</insert>
+	
+	
+	<select id="checkPassword" parameterType="member" resultType="int">
+		select count(userId) from BMmember where userId=#{userId} and userPw=#{userPw}
+	</select>
+	
+	<delete id="deleteMember" parameterType="String">
+		delete BMmember where userId = #{userId}
+	</delete>
+	
+	
+	<update id="modifyPA" parameterType="member">
+		update BMmember set nickname=#{nickname}, userPw=#{userPw}, email=#{email}, pnum=#{pnum}, profileImg=#{profileImg}
+			where userId=#{userId}
+	</update>
+	
+	<update id="modifyPB" parameterType="member">
+		update BMmember set nickname=#{nickname}, userPw=#{userPw}, email=#{email}, pnum=#{pnum}
+			where userId=#{userId}
+	</update>
+	
+	<select id="checkPick" parameterType="hashmap" resultType="int">
+		select count(idx) from BMpick where userId=#{userId} and rest=#{rest} and pick=1
+	</select>
+	
+	<insert id="insertPick" parameterType="hashmap">
+		insert into BMpick (userId, rest, pick) values (#{userId}, #{rest}, 1)
+	</insert>
+	
+	
+	<delete id="deletePick" parameterType="hashmap">
+		delete BMpick where userId=#{userId} and rest=#{rest} and pick=1
+	</delete>
+	
+	<select id="checkReserve" resultType="int" parameterType="reser">
+		select count(idx) from BMreser where userId=#{userId} and rest=#{rest} and (approval=0 OR approval=2)
+	</select>
+	
+	
+	<insert id="submitReserve" parameterType="reser">
+		insert into BMreser (userId, rest, reserDate, reserTime, people, etc) 
+			values
+		(#{userId}, #{rest}, #{reserDate}, #{reserTime}, #{people}, #{etc, jdbcType=VARCHAR})
+	</insert>
+	
+	<select id="selectReser" parameterType="String" resultType="reser">
+		select s.*, t.restName, t.international, t.restImg, t.idx as restIdx,
+			(select count(r.rest) from BMreview r where r.rest = s.rest and r.userId = #{userId}) as countReview,
+			(select round(avg(r.star),1) from BMreview r where r.rest = t.idx) as ravg
+			from BMreser s
+		inner join BMrest t on t.idx = s.rest
+			where s.userId=#{userId} and s.approval = 2 order by s.reserDate desc
+	</select>
+	
+	<select id="selectReseAndRest" parameterType="String" resultType="reser">
+		select s.*, t.restName, t.international, t.restImg, t.idx as restIdx, r.*, m.userName,
+			(select round(avg(r.star),1) from BMreview r where r.rest = t.idx) as ravg
+			from BMreser s
+		inner join BMrest t on t.idx = s.rest
+		left join BMreview r on r.rest = s.rest and r.userId = #{userId}
+		inner join BMmember m on m.userId = s.userId
+			where s.userId = #{userId} and s.approval = 2 order by s.reserDate desc
+	</select>
+	
+	<insert id="insertReview" parameterType="review">
+		insert into BMreview (userId, rest, reviewImg, review, star) 
+			values (#{userId}, #{rest}, #{reviewImg, jdbcType=VARCHAR}, #{review}, #{star})
+	</insert>
+	
+	
+	<select id="selectReview" parameterType="hashmap" resultType="review">
+		select r.*, t.restName 
+			from BMreview r
+			inner join BMrest t on t.idx = r.rest
+		where r.rest = #{idx} and r.userId = #{userId}
+	</select>
+
+	
+	<delete id="deleteReview" parameterType="hashmap">
+		delete BMreview where userId=#{userId} and rest=#{rest}
+	</delete>
+	
+	
+	<update id="updateReview" parameterType="review">
+		update BMreview set review = #{review}, star = #{star} where idx = #{idx}
+	</update>
+	
+	<select id="reviewList" resultType="review" parameterType="String">
+		select r.*, t.restName 
+			from BMreview r
+			inner join BMrest t on t.idx = r.rest
+		where r.userId = #{userId}
+	</select>	
+	
+	<select id="reserList" resultType="reser" parameterType="String">
+		select s.*, t.restName
+			from BMreser s
+		inner join BMrest t on t.idx = s.rest
+			where s.userId = #{userId} order by reserDate desc
+	</select>
+	
+	<select id="findId" resultType="String" parameterType="hashmap">
+		select userId from BMmember 
+			where userName = #{userName} and email = #{email}
+	</select>
+	
+	<select id="findPassword" resultType="String" parameterType="hashmap">
+		select userPw from BMmember
+			where userId = #{userId} and email = #{email}
+	</select>
+	
+	<update id="reSetPw" parameterType="hashmap">
+		update BMmember set userPw = #{userPw}
+			where userId = #{userId} and email = #{email}
+	</update>
+	
+</mapper>

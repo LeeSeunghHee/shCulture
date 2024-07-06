@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.seung.repository.RestDAO">
+	
+	<insert id="insertRest" parameterType="rst" >
+		insert into BMrest 
+			(restName, international, restImg, roadName, localNum, postalCode, detailL, restNum, gun, startTime, endTime, lastOrder, breakTiS, breakTiE, maxPeople,
+				restWeek, restDay, restInfo, convenient, sns, userId)
+		values (#{restName}, #{international}, #{restImg, jdbcType=VARCHAR}, #{roadName}, #{localNum}, #{postalCode}, #{detailL}, #{restNum}, #{gun}, #{startTime}, #{endTime},
+					#{lastOrder, jdbcType=VARCHAR}, #{breakTiS, jdbcType=VARCHAR}, #{breakTiE, jdbcType=VARCHAR}, #{maxPeople, jdbcType=VARCHAR}, #{restWeek}, #{restDay}, #{restInfo}, #{convenient}, #{sns}, #{userId})
+	</insert>
+	
+	<select id="getIdx" parameterType="rst" resultType="rst">
+		select idx, restName from BMrest where restName = #{restName} and userId = #{userId}
+	</select>
+	
+	<select id="userRest" parameterType="String" resultType="rst">
+		select t.*,
+			(select round(avg(w.star),1) from BMreview w where w.rest = t.idx) as ravg
+		from BMrest t where userId = #{userId}
+	</select>
+	
+	<select id="selectUserRest" resultType="rst">
+		select * from BMrest where idx=#{idx}
+	</select>
+	
+	<select id="selectBooking" resultType="book">
+		select * from BMBooking where rest = #{idx}
+	</select>
+	
+	<update id="modifyRestA" parameterType="rst">
+		update BMrest set restName=#{restName}, international=#{international}, roadName=#{roadName}, localNum=#{localNum}
+			,postalCode=#{postalCode}, detailL=#{detailL}, restNum=#{restNum}, gun=#{gun}, restImg=#{restImg}
+			,startTime=#{startTime}, endTime=#{endTime}, lastOrder=#{lastOrder}, breakTiS=#{breakTiS}, breakTiE=#{breakTiE}, maxPeople=#{maxPeople}
+			,restWeek=#{restWeek}, restDay=#{restDay}, restInfo=#{restInfo}, convenient=#{convenient}, sns=#{sns}
+			where idx=#{idx}
+	</update>
+	
+	<update id="modifyRestB" parameterType="rst">
+		update BMrest set restName=#{restName}, international=#{international}, roadName=#{roadName}, localNum=#{localNum}
+			,postalCode=#{postalCode}, detailL=#{detailL}, restNum=#{restNum}, gun=#{gun}
+			,startTime=#{startTime}, endTime=#{endTime}, lastOrder=#{lastOrder}, breakTiS=#{breakTiS}, breakTiE=#{breakTiE}, maxPeople=#{maxPeople} 
+			,restWeek=#{restWeek}, restDay=#{restDay}, restInfo=#{restInfo}, convenient=#{convenient}, sns=#{sns}
+			where idx=#{idx}
+	</update>
+	
+	
+	<update id="modifyReserve" parameterType="book">
+		update BMbooking set breakTiOne=#{breakTiOne}, breakTiTwo=#{breakTiTwo}, rotation=#{rotation}, timer=#{timer}
+	</update>
+	
+	<select id="selectReserListW" parameterType="Integer" resultType="reser">
+		select r.*,
+			(select userName from BMmember m where m.userId = r.userId) as userName 
+		from BMreser r
+			where r.rest = #{rest} and approval = 0 order by idx
+	</select>
+	
+	<select id="selectReserListD" parameterType="Integer" resultType="reser">
+		select r.*,
+			(select userName from BMmember m where m.userId = r.userId) as userName 
+		from BMreser r
+			where r.rest = #{rest} and approval = 1 order by idx
+	</select>
+	
+	<select id="reserDateList" parameterType="hashmap" resultType="reser">
+		select r.*,
+			(select userName from BMmember m where m.userId = r.userId) as userName 
+		from BMreser r
+			where r.rest = #{rest} and r.reserDate = #{selectDate} and approval = 2
+	</select>
+	
+	<insert id="addBooking" parameterType="book">
+		insert into BMbooking 
+			(rest, rotation, breakTiOne, breakTiTwo, timer)
+		values
+			(#{rest}, #{rotation}, #{breakTiOne}, #{breakTiTwo}, #{timer})
+	</insert>
+	
+	
+	<select id="manageRest" parameterType="String" resultType="rst">
+		select t.*,
+			(select round(avg(w.star),1) from BMreview w where w.rest = t.idx) as ravg,
+			(select count(r.approval) from BMreser r where r.approval = 0 and r.rest = t.idx) as app
+		from BMrest t where userId = #{userId}
+	</select>
+	
+	<update id="updateReser" parameterType="hashmap">
+		update BMreser set approval  = #{approval} where idx = #{idx}
+	</update>
+	
+	<delete id="deleteRest" parameterType="hashmap">
+		delete BMrest where idx = #{idx}
+	</delete>
+	
+	<select id="countWarning" parameterType="hashmap">
+		select * from BMwarning where reviewIdx = #{idx}
+	</select>
+	
+	<insert id="insertWarning" parameterType="warning">
+		insert into BMWarning (rest, userId, reviewIdx, reviewContent, reason) 
+			values (#{rest}, #{userId}, #{reviewIdx}, #{reviewContent}, #{reason})
+	</insert>
+	
+	<select id="selectWarning" parameterType="hashmap">
+		select * from BMwarning where rest = #{idx} order by idx
+	</select>
+	
+	<select id="rankRest" resultType="rst">
+		 select *
+		    from (
+		        select t.*, 
+		            (select round(avg(w.star),1)
+		                from BMreview w
+		                where w.rest = t.idx) as ravg
+		        from BMrest t
+		        where (select round(avg(w.star),1)
+		                from BMreview w
+		                where w.rest = t.idx) is not null
+		        order by ravg desc
+		    )
+   		 where rownum &lt;= 10	
+	</select>
+
+</mapper>

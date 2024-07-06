@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC 
+	"-//mybatis.org//DTD Config 3.0//EN" 
+	"https://mybatis.org/dtd/mybatis-3-config.dtd">
+	
+<configuration>
+	<settings>
+		<setting name="cacheEnabled" value="false"/>
+		<setting name="useGeneratedKeys" value="false"/>
+		<setting name="mapUnderscoreToCamelCase" value="false"/>
+		<setting name="jdbcTypeForNull" value="VARCHAR" />
+	</settings>
+		
+		
+	<typeAliases>
+		<typeAlias type="com.seung.model.MemberDTO" alias="member"/>
+		<typeAlias type="com.seung.model.RestaurantDTO" alias="rst"/>
+		<typeAlias type="com.seung.model.ReservationDTO" alias="reser"/>
+		<typeAlias type="com.seung.model.MenuDTO" alias="menu"/>
+		<typeAlias type="com.seung.model.BusanDTO" alias="busan"/>
+		<typeAlias type="com.seung.model.PickDTO" alias="pick"/>
+		<typeAlias type="com.seung.model.InternationalDTO" alias="inter"/>
+		<typeAlias type="com.seung.model.BookingDTO" alias="book"/>
+		<typeAlias type="com.seung.model.ReviewDTO" alias="review"/>
+		<typeAlias type="com.seung.model.WarningDTO" alias="warning"/>
+		<typeAlias type="com.seung.model.QnaDTO" alias="qna"/>
+		<typeAlias type="com.seung.model.ReplyDTO" alias="reply"/>
+	</typeAliases>	
+</configuration>

@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC
+	"-//mybatis.org//DTD Mapper 3.0//EN"
+	"https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.seung.repository.BoardDAO">
+
+	<select id="allRest" parameterType="rst" resultType="rst">
+		select t.*,
+			(select round(avg(w.star),1) from BMreview w where w.rest = t.idx) as ravg
+		from BMrest t
+	</select>
+
+	<select id="busan" parameterType="busan" resultType="busan">
+		select *
+		from busan order by idx
+	</select>
+
+	<select id="international" parameterType="inter"
+		resultType="inter">
+		select * from international
+	</select>
+
+	<select id="selectRestLogin" parameterType="hashmap"
+		resultType="rst">
+		select r.*,
+		(select count(p.rest) from BMpick p where p.rest = #{idx} and p.userId=#{userId}) as pick_count
+		,(select count(s.rest) from BMreser s where s.rest = #{idx} and s.userId=#{userId}) as reser_count
+		,(select round(avg(w.star),1) from BMreview w where w.rest = r.idx) as ravg
+		from BMrest r where r.idx = #{idx}
+	</select>
+
+	<select id="selectRest" parameterType="rst" resultType="rst">
+		select t.*,
+    		(select round(avg(w.star),1) from BMreview w where w.rest = t.idx) as ravg
+   		from BMrest t where t.idx = #{idx}
+	</select>
+
+	<select id="selectMenu" parameterType="menu" resultType="menu">
+		select *
+		from BMmenu where rest = #{idx} order by idx
+	</select>
+	
+	<select id="selectBooking" parameterType="book" resultType="book">
+		select timer from BMbooking where rest = #{idx}
+	</select>
+
+	<select id="searchOption" resultType="rst">
+		select t.*,
+		 (select round(avg(w.star),1) from BMreview w where w.rest = t.idx) as ravg
+		from BMrest t where
+		<if test="gunList != null and gunList.size() > 0">
+			t.gun in
+			<foreach collection="gunList" item="gun" open="(" close=")"
+				separator=",">
+				#{gun}
+			</foreach>
+		</if>
+
+		<if test="interList != null and interList.size() > 0">
+			<if test="gunList != null and gunList.size() > 0">and</if>
+			t.international in
+			<foreach collection="interList" item="inter" open="("
+				close=")" separator=",">
+				#{inter}
+			</foreach>
+		</if>
+		order by t.idx
+	</select>
+
+
+	<select id="searchAll" resultType="rst" parameterType="String">
+		select t.*,
+		(select round(avg(w.star),1) from BMreview w where w.rest = t.idx) as ravg 
+		from BMrest t
+			where t.international like '%'||#{data}||'%' 
+				or t.restName like '%'||#{data}||'%' 
+				or t.gun like '%'||#{data}||'%'
+	</select>
+	
+	
+	<select id="selectReviewOne" parameterType="review" resultType="review">
+		select w.*, m.nickname, m.profileImg
+			from BMreview w
+				inner join BMmember m on m.userId = w.userId
+			where w.rest = #{idx} order by writeDate desc
+	</select>
+	
+	<select id="selectReviewTwo" parameterType="review" resultType="review">
+		select w.*, m.nickname, m.profileImg
+			from BMreview w
+				inner join BMmember m on m.userId = w.userId
+			where w.rest = #{idx} order by recommend desc
+	</select>
+	
+	<update id="addRecommend" parameterType="Integer">
+		update BMreview set recommend = recommend + 1 where idx = #{idx}
+	</update>
+</mapper>
